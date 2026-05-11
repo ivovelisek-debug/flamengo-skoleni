@@ -39,6 +39,24 @@ export default function QuizView({ module, progress, onComplete, onBack, onHome 
     window.scrollTo(0, 0)
   }
 
+  function handleEvaluateNow() {
+    const total = questions.length
+    const answeredCount = answers.length + (selected !== null ? 1 : 0)
+    const remaining = total - answeredCount
+    const msg = remaining > 0
+      ? `Zbývá ${remaining} ${remaining === 1 ? 'otázka' : remaining < 5 ? 'otázky' : 'otázek'}. Nezodpovězené budou počítány jako špatně. Vyhodnotit?`
+      : 'Vyhodnotit nyní?'
+    if (!window.confirm(msg)) return
+    const finalAnswers = [...answers]
+    if (selected !== null) finalAnswers.push(selected)
+    while (finalAnswers.length < total) finalAnswers.push(null)
+    const score = finalAnswers.filter((a, i) => a === questions[i].correct).length
+    setAnswers(finalAnswers)
+    onComplete(score, total)
+    setShowResult(true)
+    window.scrollTo(0, 0)
+  }
+
   if (showResult) {
     const score = answers.filter((a, i) => a === questions[i].correct).length
     const percent = Math.round((score / questions.length) * 100)
@@ -164,6 +182,15 @@ export default function QuizView({ module, progress, onComplete, onBack, onHome 
             {current + 1 < questions.length ? 'Další otázka →' : 'Zobrazit výsledky →'}
           </button>
         )}
+
+        <div className="quiz-early-evaluate">
+          <button className="btn btn-ghost btn-evaluate-now" onClick={handleEvaluateNow}>
+            ⏭ Vyhodnotit nyní
+          </button>
+          <p className="quiz-early-note">
+            Nezodpovězené otázky se započítají jako nesprávné.
+          </p>
+        </div>
       </div>
     </div>
   )

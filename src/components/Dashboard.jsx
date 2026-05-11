@@ -1,4 +1,5 @@
-export default function Dashboard({ modules, progress, userName, onOpenModule, onOpenQuiz, onOpenChecklist, onOpenReport, onResetProgress, onLogout }) {
+export default function Dashboard({ modules, progress, userName, role, onOpenModule, onOpenQuiz, onOpenChecklist, onOpenReport, onResetProgress, onLogout }) {
+  const isAdmin = role === 'admin'
   const completedModules = modules.filter(m => progress[m.id]?.quizDone).length
   const totalModules = modules.length
   const overallPercent = Math.round((completedModules / totalModules) * 100)
@@ -38,7 +39,10 @@ export default function Dashboard({ modules, progress, userName, onOpenModule, o
       </header>
 
       <div className="user-bar">
-        <span className="user-bar-name">👤 {userName}</span>
+        <span className="user-bar-name">
+          {isAdmin ? '🔒 ' : '👤 '}{userName}
+          {isAdmin && <span className="user-bar-role"> · administrátor</span>}
+        </span>
         <button className="user-bar-logout" onClick={onLogout}>Odhlásit</button>
       </div>
 
@@ -112,8 +116,10 @@ export default function Dashboard({ modules, progress, userName, onOpenModule, o
           <button className="btn-report" onClick={onOpenReport}>
             <span>📊</span>
             <div>
-              <div className="checklist-btn-title">Výsledky školení</div>
-              <div className="checklist-btn-sub">Kdo vyplnil a s jakým skóre</div>
+              <div className="checklist-btn-title">{isAdmin ? 'Výsledky školení' : 'Moje výsledky'}</div>
+              <div className="checklist-btn-sub">
+                {isAdmin ? 'Kdo vyplnil a s jakým skóre' : 'Tvé dokončené kvízy a skóre'}
+              </div>
             </div>
           </button>
         </div>

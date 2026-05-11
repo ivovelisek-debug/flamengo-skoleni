@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 
-export default function ReportView({ onBack }) {
+export default function ReportView({ onBack, userName, role }) {
   const [reports, setReports] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const isAdmin = role === 'admin'
 
   useEffect(() => {
     fetch('/api/results')
@@ -12,9 +13,10 @@ export default function ReportView({ onBack }) {
       .catch(e => { setError(e.message); setLoading(false) })
   }, [])
 
-  // Group by name, sort alphabetically
+  const visibleReports = isAdmin ? reports : reports.filter(r => r.name === userName)
+
   const byName = {}
-  reports.forEach(r => {
+  visibleReports.forEach(r => {
     if (!byName[r.name]) byName[r.name] = []
     byName[r.name].push(r)
   })
@@ -24,10 +26,12 @@ export default function ReportView({ onBack }) {
     <div className="report-view">
       <div className="checklist-topbar">
         <button className="back-btn" onClick={onBack}>← Zpět</button>
-        <div className="checklist-topbar-title">📊 Výsledky školení</div>
-        {reports.length > 0 && (
+        <div className="checklist-topbar-title">
+          {isAdmin ? '📊 Výsledky školení' : '📊 Moje výsledky'}
+        </div>
+        {isAdmin && visibleReports.length > 0 ? (
           <a className="export-btn" href="/api/export" download>⬇ CSV</a>
-        )}
+        ) : <div />}
       </div>
 
       <div className="report-content">
@@ -46,32 +50,40 @@ export default function ReportView({ onBack }) {
           </div>
         )}
 
-        {!loading && !error && reports.length === 0 && (
+        {!loading && !error && visibleReports.length === 0 && (
           <div className="report-empty">
             <div className="report-empty-icon">📋</div>
-            <div className="report-empty-text">Žádné výsledky zatím.</div>
-            <div className="report-empty-sub">Výsledky se ukládají automaticky po dokončení kvízu.</div>
+            <div className="report-empty-text">
+              {isAdmin ? 'Žádné výsledky zatím.' : 'Zatím nemáš žádné dokončené kvízy.'}
+            </div>
+            <div className="report-empty-sub">
+              {isAdmin
+                ? 'Výsledky se ukládají automaticky po dokončení kvízu.'
+                : 'Dokončené kvízy se zde objeví automaticky.'}
+            </div>
           </div>
         )}
 
-        {!loading && !error && reports.length > 0 && (
+        {!loading && !error && visibleReports.length > 0 && (
           <>
-            <div className="report-summary">
-              <div className="report-summary-item">
-                <div className="rs-value">{names.length}</div>
-                <div className="rs-label">floristek</div>
-              </div>
-              <div className="report-summary-item">
-                <div className="rs-value">{reports.length}</div>
-                <div className="rs-label">kvízů splněno</div>
-              </div>
-              <div className="report-summary-item">
-                <div className="rs-value">
-                  {Math.round(reports.reduce((s, r) => s + r.percent, 0) / reports.length)} %
+            {isAdmin && (
+              <div className="report-summary">
+                <div className="report-summary-item">
+                  <div className="rs-value">{names.length}</div>
+                  <div className="rs-label">floristek</div>
                 </div>
-                <div className="rs-label">průměr</div>
+                <div className="report-summary-item">
+                  <div className="rs-value">{visibleReports.length}</div>
+                  <div className="rs-label">kvízů splněno</div>
+                </div>
+                <div className="report-summary-item">
+                  <div className="rs-value">
+                    {Math.round(visibleReports.reduce((s, r) => s + r.percent, 0) / visibleReports.length)} %
+                  </div>
+                  <div className="rs-label">průměr</div>
+                </div>
               </div>
-            </div>
+            )}
 
             {names.map(name => {
               const results = byName[name]

@@ -11,8 +11,15 @@ function loadUserName() {
   try { return localStorage.getItem('flamengo_user') || null } catch { return null }
 }
 
-function saveUserName(name) {
-  try { localStorage.setItem('flamengo_user', name) } catch {}
+function loadRole() {
+  try { return localStorage.getItem('flamengo_role') || null } catch { return null }
+}
+
+function saveAuth(name, role) {
+  try {
+    localStorage.setItem('flamengo_user', name)
+    localStorage.setItem('flamengo_role', role)
+  } catch {}
 }
 
 function progressKey(name) {
@@ -40,6 +47,7 @@ async function postResult(entry) {
 
 export default function App() {
   const [userName, setUserName] = useState(loadUserName)
+  const [role, setRole] = useState(loadRole)
   const [view, setView] = useState('dashboard')
   const [activeModuleId, setActiveModuleId] = useState(null)
   const [progress, setProgress] = useState(() => userName ? loadProgress(userName) : {})
@@ -50,9 +58,10 @@ export default function App() {
 
   const activeModule = modules.find(m => m.id === activeModuleId)
 
-  function handleLogin(name) {
-    saveUserName(name)
+  function handleLogin({ name, role }) {
+    saveAuth(name, role)
     setUserName(name)
+    setRole(role)
     setProgress(loadProgress(name))
     setView('dashboard')
   }
@@ -60,9 +69,11 @@ export default function App() {
   function logout() {
     if (!window.confirm('Odhlásit se?')) return
     setUserName(null)
+    setRole(null)
     setProgress({})
     setView('dashboard')
     localStorage.removeItem('flamengo_user')
+    localStorage.removeItem('flamengo_role')
   }
 
   function openModule(id) {
@@ -119,6 +130,7 @@ export default function App() {
           modules={modules}
           progress={progress}
           userName={userName}
+          role={role}
           onOpenModule={openModule}
           onOpenQuiz={openQuiz}
           onOpenChecklist={() => setView('checklist')}
@@ -149,7 +161,7 @@ export default function App() {
         <ChecklistView onBack={goHome} />
       )}
       {view === 'report' && (
-        <ReportView onBack={goHome} />
+        <ReportView onBack={goHome} userName={userName} role={role} />
       )}
     </div>
   )
