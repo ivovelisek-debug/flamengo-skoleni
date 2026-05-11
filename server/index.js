@@ -2,7 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import { db, initDb } from '../lib/db.js'
+import { getDb, initDb } from '../lib/db.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const app = express()
@@ -12,6 +12,7 @@ app.use(cors())
 app.use(express.json())
 
 app.post('/api/results', async (req, res) => {
+  const db = await getDb()
   const { name, moduleId, moduleTitle, score, total, percent, date, timestamp } = req.body
   if (!name || moduleId == null) return res.status(400).json({ error: 'Chybí povinná pole' })
   await db.execute({
@@ -30,6 +31,7 @@ app.post('/api/results', async (req, res) => {
 })
 
 app.get('/api/results', async (_req, res) => {
+  const db = await getDb()
   const { rows } = await db.execute(`
     SELECT name, module_id AS moduleId, module_title AS moduleTitle,
            score, total, percent, date, timestamp
@@ -39,6 +41,7 @@ app.get('/api/results', async (_req, res) => {
 })
 
 app.get('/api/export', async (_req, res) => {
+  const db = await getDb()
   const { rows } = await db.execute(`
     SELECT name, module_title, score, total, percent, date
     FROM results ORDER BY name, timestamp DESC

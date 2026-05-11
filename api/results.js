@@ -1,4 +1,4 @@
-import { db, initDb } from '../lib/db.js'
+import { getDb, initDb } from '../lib/db.js'
 
 let ready = false
 async function ensureDb() {
@@ -7,6 +7,7 @@ async function ensureDb() {
 
 export default async function handler(req, res) {
   await ensureDb()
+  const db = await getDb()
 
   if (req.method === 'GET') {
     const { rows } = await db.execute(`
