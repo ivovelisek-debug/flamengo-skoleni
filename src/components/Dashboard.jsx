@@ -1,4 +1,4 @@
-export default function Dashboard({ modules, progress, userName, role, onOpenModule, onOpenQuiz, onOpenChecklist, onOpenReport, onResetProgress, onLogout }) {
+export default function Dashboard({ modules, progress, userName, storeId, role, onOpenModule, onOpenQuiz, onOpenChecklist, onOpenReport, onResetProgress, onLogout }) {
   const isAdmin = role === 'admin'
   const completedModules = modules.filter(m => progress[m.id]?.quizDone).length
   const totalModules = modules.length
@@ -42,6 +42,7 @@ export default function Dashboard({ modules, progress, userName, role, onOpenMod
         <span className="user-bar-name">
           {isAdmin ? '🔒 ' : '👤 '}{userName}
           {isAdmin && <span className="user-bar-role"> · administrátor</span>}
+          {!isAdmin && storeId && <span className="user-bar-store">📍 pobočka {storeId}</span>}
         </span>
         <button className="user-bar-logout" onClick={onLogout}>Odhlásit</button>
       </div>

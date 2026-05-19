@@ -15,12 +15,19 @@ export default function ReportView({ onBack, userName, role }) {
 
   const visibleReports = isAdmin ? reports : reports.filter(r => r.name === userName)
 
+  // Group by name (preserves storeId per person)
   const byName = {}
   visibleReports.forEach(r => {
-    if (!byName[r.name]) byName[r.name] = []
-    byName[r.name].push(r)
+    if (!byName[r.name]) byName[r.name] = { storeId: r.storeId || '', results: [] }
+    byName[r.name].results.push(r)
+    if (r.storeId) byName[r.name].storeId = r.storeId
   })
-  const names = Object.keys(byName).sort()
+  const names = Object.keys(byName).sort((a, b) => {
+    const sa = byName[a].storeId || ''
+    const sb = byName[b].storeId || ''
+    if (sa !== sb) return sa.localeCompare(sb, 'cs')
+    return a.localeCompare(b, 'cs')
+  })
 
   return (
     <div className="report-view">
@@ -30,7 +37,10 @@ export default function ReportView({ onBack, userName, role }) {
           {isAdmin ? '📊 Výsledky školení' : '📊 Moje výsledky'}
         </div>
         {isAdmin && visibleReports.length > 0 ? (
-          <a className="export-btn" href="/api/export" download>⬇ CSV</a>
+          <div className="export-group">
+            <a className="export-btn" href="/api/export-xlsx" download>⬇ Excel</a>
+            <a className="export-btn export-btn-secondary" href="/api/export" download>CSV</a>
+          </div>
         ) : <div />}
       </div>
 
@@ -86,13 +96,16 @@ export default function ReportView({ onBack, userName, role }) {
             )}
 
             {names.map(name => {
-              const results = byName[name]
+              const { storeId: sid, results } = byName[name]
               const passed = results.filter(r => r.percent >= 80).length
               const avg = Math.round(results.reduce((s, r) => s + r.percent, 0) / results.length)
               return (
                 <div key={name} className="report-person">
                   <div className="report-person-header">
-                    <span className="report-person-name">👤 {name}</span>
+                    <span className="report-person-name">
+                      {sid && <span className="report-person-store">📍 {sid}</span>}
+                      👤 {name}
+                    </span>
                     <span className="report-person-stats">
                       {passed}/{results.length} splněno · ø {avg} %
                     </span>

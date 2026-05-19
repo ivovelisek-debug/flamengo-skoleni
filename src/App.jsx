@@ -15,10 +15,16 @@ function loadRole() {
   try { return localStorage.getItem('flamengo_role') || null } catch { return null }
 }
 
-function saveAuth(name, role) {
+function loadStoreId() {
+  try { return localStorage.getItem('flamengo_store') || null } catch { return null }
+}
+
+function saveAuth(name, role, storeId) {
   try {
     localStorage.setItem('flamengo_user', name)
     localStorage.setItem('flamengo_role', role)
+    if (storeId) localStorage.setItem('flamengo_store', storeId)
+    else localStorage.removeItem('flamengo_store')
   } catch {}
 }
 
@@ -48,6 +54,7 @@ async function postResult(entry) {
 export default function App() {
   const [userName, setUserName] = useState(loadUserName)
   const [role, setRole] = useState(loadRole)
+  const [storeId, setStoreId] = useState(loadStoreId)
   const [view, setView] = useState('dashboard')
   const [activeModuleId, setActiveModuleId] = useState(null)
   const [progress, setProgress] = useState(() => userName ? loadProgress(userName) : {})
@@ -58,10 +65,11 @@ export default function App() {
 
   const activeModule = modules.find(m => m.id === activeModuleId)
 
-  function handleLogin({ name, role }) {
-    saveAuth(name, role)
+  function handleLogin({ name, role, storeId }) {
+    saveAuth(name, role, storeId)
     setUserName(name)
     setRole(role)
+    setStoreId(storeId || null)
     setProgress(loadProgress(name))
     setView('dashboard')
   }
@@ -70,10 +78,12 @@ export default function App() {
     if (!window.confirm('Odhlásit se?')) return
     setUserName(null)
     setRole(null)
+    setStoreId(null)
     setProgress({})
     setView('dashboard')
     localStorage.removeItem('flamengo_user')
     localStorage.removeItem('flamengo_role')
+    localStorage.removeItem('flamengo_store')
   }
 
   function openModule(id) {
@@ -97,6 +107,7 @@ export default function App() {
     const mod = modules.find(m => m.id === id)
     postResult({
       name: userName,
+      storeId: storeId || null,
       moduleId: id,
       moduleTitle: mod?.title || `Modul ${id}`,
       score,
@@ -130,6 +141,7 @@ export default function App() {
           modules={modules}
           progress={progress}
           userName={userName}
+          storeId={storeId}
           role={role}
           onOpenModule={openModule}
           onOpenQuiz={openQuiz}
